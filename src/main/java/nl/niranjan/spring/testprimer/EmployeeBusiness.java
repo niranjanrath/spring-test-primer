@@ -6,7 +6,7 @@ import java.util.UUID;
 public interface EmployeeBusiness {
     Iterable<Employee> getAllEmployees();
 
-    Optional<Employee> getEmployeeById(UUID empUuid);
+    Optional<Employee> getEmployeeById(Long empUuid);
 
     Employee createNewEmployee(Employee employee);
 }

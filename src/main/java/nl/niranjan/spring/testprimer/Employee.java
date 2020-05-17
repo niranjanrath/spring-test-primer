@@ -19,6 +19,6 @@ import java.util.UUID;
 public class Employee {
     @Id
     @GeneratedValue
-    private UUID id;
+    private Long id;
     private String name;
 }

@@ -29,7 +29,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/{Id}")
-    public ResponseEntity<Optional<Employee>> getEmployeeById(@PathVariable("Id") UUID empUuid){
+    public ResponseEntity<Optional<Employee>> getEmployeeById(@PathVariable("Id") Long empUuid){
         try{
             Optional<Employee> employee = employeeBusiness.getEmployeeById(empUuid);
             return  employee.isPresent() ?

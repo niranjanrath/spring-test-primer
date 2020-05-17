@@ -17,7 +17,7 @@ public class EmployeeBusinessImpl implements EmployeeBusiness {
     }
 
     @Override
-    public Optional<Employee> getEmployeeById(UUID empUuid){
+    public Optional<Employee> getEmployeeById(Long empUuid){
         return employeeService.getEmployeeById(empUuid);
     }
 

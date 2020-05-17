@@ -2,8 +2,10 @@ package nl.niranjan.spring.testprimer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -14,33 +16,27 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 class EmployeeControllerTest {
 
-    private MockMvc mockMvc;
-
     @Autowired
-    private EmployeeController employeeController;
+    private MockMvc mockMvc;
 
     @MockBean
     private EmployeeBusiness employeeBusiness;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(employeeController).build();
-    }
-
     @Test
     void getAllEmployeesWhenOneEmployee() throws Exception {
-        UUID empUuid = UUID.randomUUID();
         Mockito.when(employeeBusiness.getAllEmployees()).thenReturn(Arrays.asList(Employee.builder()
-                .id(empUuid).name("Niranjan Rath").build()));
+                .id(Long.parseLong("1")).name("Niranjan Rath").build()));
         mockMvc.perform(MockMvcRequestBuilders.get("/employees"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.content().json("[{'id':'" + empUuid + "','name':'Niranjan Rath'}]"));
+                .andExpect(MockMvcResultMatchers.content().json("[{'id':1,'name':'Niranjan Rath'}]"));
         Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getAllEmployees();
     }
 
@@ -80,76 +76,71 @@ class EmployeeControllerTest {
 
     @Test
     void getAllEmployeesWhenMultipleEmployees() throws Exception {
-        UUID empUuid1 = UUID.randomUUID();
-        UUID empUuid2 = UUID.randomUUID();
         Mockito.when(employeeBusiness.getAllEmployees())
                 .thenReturn(Arrays.asList(
                         Employee.builder()
-                                .id(empUuid1)
+                                .id(Long.parseLong("1"))
                                 .name("Employee1")
                                 .build(),
                         Employee.builder()
-                                .id(empUuid2)
+                                .id(Long.parseLong("2"))
                                 .name("Employee2")
                                 .build()));
         mockMvc.perform(MockMvcRequestBuilders.get("/employees"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.content().json("[" +
-                        "{'id':'" + empUuid1 + "','name':'Employee1'}," +
-                        "{'id':'" + empUuid2 + "','name':'Employee2'}" +
+                        "{'id':1,'name':'Employee1'}," +
+                        "{'id':2,'name':'Employee2'}" +
                         "]"));
         Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getAllEmployees();
     }
 
     @Test
     void getEmployeeByIdWhenAvailableInDatabase() throws Exception {
-        UUID empUuid = UUID.randomUUID();
-        Mockito.when(employeeBusiness.getEmployeeById(empUuid)).thenReturn(Optional.of(Employee.builder()
-                .id(empUuid).name("Employee 1").build()));
-        mockMvc.perform(MockMvcRequestBuilders.get("/employees/" + empUuid))
+        Mockito.when(employeeBusiness.getEmployeeById(Long.parseLong("1"))).thenReturn(Optional.of(Employee.builder()
+                .id(Long.parseLong("1")).name("Employee 1").build()));
+        mockMvc.perform(MockMvcRequestBuilders.get("/employees/1"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.content().json("{'id':'" + empUuid + "','name':'Employee 1'}"));
-        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(empUuid);
+                .andExpect(MockMvcResultMatchers.content().json("{'id':1,'name':'Employee 1'}"));
+        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(Mockito.anyLong());
     }
 
     @Test
     void getEmployeeByIdWhenNotAvailableInDatabase() throws Exception {
-        UUID empUuid = UUID.randomUUID();
-        Mockito.when(employeeBusiness.getEmployeeById(empUuid)).thenReturn(Optional.empty());
-        mockMvc.perform(MockMvcRequestBuilders.get("/employees/" + empUuid))
+        Long empId1 = new Random().nextLong();
+        Mockito.when(employeeBusiness.getEmployeeById(empId1)).thenReturn(Optional.empty());
+        mockMvc.perform(MockMvcRequestBuilders.get("/employees/" + empId1))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$").doesNotExist());
-        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(empUuid);
+        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(Mockito.anyLong());
     }
 
     @Test
     void getEmployeeByIdWhenNullValueReturned() throws Exception {
-        UUID empUuid = UUID.randomUUID();
-        Mockito.when(employeeBusiness.getEmployeeById(empUuid)).thenReturn(null);
-        mockMvc.perform(MockMvcRequestBuilders.get("/employees/" + empUuid))
+        Long empId1 = new Random().nextLong();
+        Mockito.when(employeeBusiness.getEmployeeById(empId1)).thenReturn(null);
+        mockMvc.perform(MockMvcRequestBuilders.get("/employees/" + empId1))
                 .andExpect(MockMvcResultMatchers.status().is5xxServerError());
-        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(empUuid);
+        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(Mockito.anyLong());
     }
 
     @Test
     void getEmployeeByIdWhenExceptionThrown() throws Exception {
-        UUID empUuid = UUID.randomUUID();
-        Mockito.when(employeeBusiness.getEmployeeById(empUuid)).thenThrow(RuntimeException.class);
-        mockMvc.perform(MockMvcRequestBuilders.get("/employees/" + empUuid))
+        Long empId1 = new Random().nextLong();
+        Mockito.when(employeeBusiness.getEmployeeById(empId1)).thenThrow(RuntimeException.class);
+        mockMvc.perform(MockMvcRequestBuilders.get("/employees/" + empId1))
                 .andExpect(MockMvcResultMatchers.status().is5xxServerError());
-        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(empUuid);
+        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(Mockito.anyLong());
     }
 
-    @Test
-    void createNewEmployee() throws Exception {
-        UUID empUuid = UUID.randomUUID();
-        Employee savedEmployee = Employee.builder()
-                .id(empUuid).name("Employee New").build();
-        Mockito.when(employeeBusiness.createNewEmployee(Mockito.any())).thenReturn(savedEmployee);
-        mockMvc.perform(MockMvcRequestBuilders.post("/employees", Employee.builder().name("Employee New").build()))
-                .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
-        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).createNewEmployee(Mockito.any());
-    }
+//    @Test
+//    void createNewEmployee() throws Exception {
+//        Employee savedEmployee = Employee.builder()
+//                .id(Long.parseLong("1")).name("Employee New").build();
+//        Mockito.when(employeeBusiness.createNewEmployee(Mockito.any())).thenReturn(savedEmployee);
+//
+//        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(Mockito.anyLong());
+//    }
 }
