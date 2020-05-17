@@ -6,7 +6,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -14,76 +13,75 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-class EmployeeServiceImplTest {
-
+class EmployeeBusinessImplTest {
     @Autowired
-    private EmployeeService employeeService;
+    private EmployeeBusiness employeeBusiness;
 
     @MockBean
-    private EmployeeRepository employeeRepository;
+    private EmployeeService employeeService;
 
     @Test
     void getAllEmployeesNullValue() {
-        Mockito.when(employeeRepository.findAll()).thenReturn(null);
-        Iterable<Employee> employees = employeeService.getAllEmployees();
+        Mockito.when(employeeService.getAllEmployees()).thenReturn(null);
+        Iterable<Employee> employees = employeeBusiness.getAllEmployees();
         Assertions.assertThat(employees).isNullOrEmpty();
     }
 
     @Test
     void getAllEmployeesWithValues() {
-        Mockito.when(employeeRepository.findAll())
+        Mockito.when(employeeService.getAllEmployees())
                 .thenReturn(Arrays.asList(Employee.builder()
                         .id(Long.parseLong("1")).name("test name").build()));
-        Iterable<Employee> employees = employeeService.getAllEmployees();
+        Iterable<Employee> employees = employeeBusiness.getAllEmployees();
         Assertions.assertThat(employees).isNotEmpty();
     }
 
     @Test
     void getAllEmployeesWithException() {
-        Mockito.when(employeeRepository.findAll())
+        Mockito.when(employeeService.getAllEmployees())
                 .thenThrow(RuntimeException.class);
         assertThrows(RuntimeException.class, () -> {
-            employeeService.getAllEmployees();
+            employeeBusiness.getAllEmployees();
         });
     }
 
     @Test
     void getEmployeeByIdNullValue() {
-        Mockito.when(employeeRepository.findById(Mockito.anyLong())).thenReturn(null);
-        Assertions.assertThat(employeeService.getEmployeeById(Long.parseLong("1"))).isNull();
+        Mockito.when(employeeService.getEmployeeById(Mockito.anyLong())).thenReturn(null);
+        Assertions.assertThat(employeeBusiness.getEmployeeById(Long.parseLong("1"))).isNull();
     }
 
     @Test
     void getEmployeeByIdGoodValue() {
-        Mockito.when(employeeRepository.findById(Mockito.anyLong()))
+        Mockito.when(employeeService.getEmployeeById(Mockito.anyLong()))
                 .thenReturn(Optional.of(Employee.builder()
                         .id(Long.parseLong("1")).name("Employee 1").build()));
-        Assertions.assertThat(employeeService.getEmployeeById(Long.parseLong("1"))).isNotEmpty();
+        Assertions.assertThat(employeeBusiness.getEmployeeById(Long.parseLong("1"))).isNotEmpty();
     }
 
     @Test
     void getEmployeeByIdWithException() {
-        Mockito.when(employeeRepository.findById(Mockito.anyLong()))
+        Mockito.when(employeeService.getEmployeeById(Mockito.anyLong()))
                 .thenThrow(RuntimeException.class);
         assertThrows(RuntimeException.class, () -> {
-            employeeService.getEmployeeById(Long.parseLong("1"));
+            employeeBusiness.getEmployeeById(Long.parseLong("1"));
         });
     }
 
     @Test
     void saveEmployeeHF() {
-        Mockito.when(employeeRepository.save(Mockito.any()))
+        Mockito.when(employeeService.saveEmployee(Mockito.any()))
                 .thenReturn(Employee.builder()
                         .id(Long.parseLong("1")).name("Employee 1").build());
-        Assertions.assertThat(employeeService.saveEmployee(Mockito.any())).isNotNull();
+        Assertions.assertThat(employeeBusiness.createNewEmployee(Mockito.any())).isNotNull();
     }
 
     @Test
     void saveEmployeeWithException() {
-        Mockito.when(employeeRepository.save(Mockito.any()))
+        Mockito.when(employeeService.saveEmployee(Mockito.any()))
                 .thenThrow(RuntimeException.class);
         assertThrows(RuntimeException.class, () -> {
-            employeeService.saveEmployee(Employee.builder().id(Long.parseLong("1")).name("Employee 1").build());
+            employeeBusiness.createNewEmployee(Employee.builder().id(Long.parseLong("1")).name("Employee 1").build());
         });
     }
 }
