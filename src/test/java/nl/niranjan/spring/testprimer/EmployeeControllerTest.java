@@ -1,5 +1,6 @@
 package nl.niranjan.spring.testprimer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -9,8 +10,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -25,6 +29,9 @@ class EmployeeControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @MockBean
     private EmployeeBusiness employeeBusiness;
@@ -135,12 +142,42 @@ class EmployeeControllerTest {
         Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(Mockito.anyLong());
     }
 
-//    @Test
-//    void createNewEmployee() throws Exception {
-//        Employee savedEmployee = Employee.builder()
-//                .id(Long.parseLong("1")).name("Employee New").build();
-//        Mockito.when(employeeBusiness.createNewEmployee(Mockito.any())).thenReturn(savedEmployee);
-//
-//        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).getEmployeeById(Mockito.anyLong());
-//    }
+    @Test
+    void createNewEmployeeHappyFlow() throws Exception {
+        Employee savedEmployee = Employee.builder()
+                .id(Long.parseLong("1")).name("Employee New").build();
+        Mockito.when(employeeBusiness.createNewEmployee(Mockito.any())).thenReturn(savedEmployee);
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/employees")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Employee.builder().name("Employee New").build())))
+                .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).createNewEmployee(Mockito.any());
+    }
+
+    @Test
+    void createNewEmployeeEmptyBody() throws Exception {
+        Employee savedEmployee = Employee.builder()
+                .id(Long.parseLong("1")).name("Employee New").build();
+        Mockito.when(employeeBusiness.createNewEmployee(Mockito.any())).thenReturn(savedEmployee);
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/employees")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Employee.builder().build())))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        Mockito.verify(employeeBusiness, Mockito.never()).createNewEmployee(Mockito.any());
+    }
+
+    @Test
+    void createNewEmployeeWhenExceptionThrown() throws Exception {
+        Employee savedEmployee = Employee.builder()
+                .id(Long.parseLong("1")).name("Employee New").build();
+        Mockito.when(employeeBusiness.createNewEmployee(Mockito.any())).thenThrow(RuntimeException.class);
+        mockMvc.perform(MockMvcRequestBuilders
+                .post("/employees")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Employee.builder().name("Employee New").build())))
+                .andExpect(MockMvcResultMatchers.status().is5xxServerError());
+        Mockito.verify(employeeBusiness, Mockito.atLeastOnce()).createNewEmployee(Mockito.any());
+    }
 }

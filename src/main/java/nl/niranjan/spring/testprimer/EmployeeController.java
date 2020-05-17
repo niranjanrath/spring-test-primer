@@ -2,6 +2,7 @@ package nl.niranjan.spring.testprimer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/employees")
+@RequestMapping(value = "/employees")
 public class EmployeeController {
 
     @Autowired
@@ -43,10 +44,9 @@ public class EmployeeController {
     @PostMapping()
     public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee){
         try{
-            Employee savedEmployee = employeeBusiness.createNewEmployee(employee);
-            return  savedEmployee.getId() != null?
-                    ResponseEntity.status(HttpStatus.CREATED).body(employee) :
-                    ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            return  employee != null && employee.getName() != null ?
+                    ResponseEntity.status(HttpStatus.CREATED).body(employeeBusiness.createNewEmployee(employee)) :
+                    ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
